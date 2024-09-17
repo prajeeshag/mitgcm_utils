@@ -54,7 +54,11 @@ def from_wrf(
         - Compute the time difference quantities of accumulated fields.
         - Mask the land points and extrapolate it with the nearest neighbor method for T2, Q2 and PSFC
         - Writes the resulting data to MITgcm compatible binary files with the specified suffix.
-    Note: The first time step is dropped since it is used only to compute the time difference quatities of accumulated fields.
+    Note: 
+        The first time step is dropped since it is used only to compute the time difference quatities of accumulated fields.
+    
+    Example:
+        `mkMITgcmEXF from-wrf --lonlatbox 29.8,50.2,9.8,30.2 --geo-em-file geo_em.d01.nc wrfout_d01_*` 
     """
 
     cdo = Cdo()
