@@ -9,7 +9,7 @@ dynamic = ["version"]
 description = "Command line tools for MITgcm"
 license = { file = "LICENSE" }
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.8"
 dependencies = [
 "numpy",
 "xarray",
@@ -22,6 +22,10 @@ dependencies = [
 "pandas",
 "xlsxwriter",
 ]
+
+[tool.setuptools.packages.find]
+where = ["mitgcm_utils"]
+exclude = ["test_data", "docs"]
 
 [project.scripts]
 mkMITgcmIC = "mitgcm_utils.mkMITgcmIC:app"
