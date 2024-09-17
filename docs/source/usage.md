@@ -19,10 +19,10 @@ Activate this environment to use the cli utilities.
 $ micromamba activate mitgcm
 ```
 :::{note}
-You can use `conda` or `mamba` in place of `micromamba`, I prefer `micromamba`, as it is much faster
-Refer [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html#automatic-install) for *micromamba*
-Refer [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for *conda*.
-Refer [Mamba documentation](https://mamba.readthedocs.io/en/latest/installation.html) for installing *mamba*
+You can use `conda` or `mamba` in place of `micromamba`. I prefer `micromamba`, as it is much faster.
+- Refer [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html#automatic-install) for installing *micromamba*
+- Refer [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for installing *conda*.
+- Refer [Mamba documentation](https://mamba.readthedocs.io/en/latest/installation.html) for installing *mamba*
 :::
 
 # Usage

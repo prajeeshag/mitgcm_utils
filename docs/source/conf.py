@@ -22,7 +22,7 @@ sys.path.append(os.path.abspath("../"))
 
 extensions = [
     "sphinx_copybutton",
-    "sphinx.ext.napoleon",
+    # "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx_click",    
     "myst_parser",
