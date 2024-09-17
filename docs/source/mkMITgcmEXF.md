@@ -1,9 +1,7 @@
-```{eval-rst}
-.. click:: mitgcm_utils.mkMITgcmEXF:app_click
+```{click} mitgcm_utils.mkMITgcmEXF:app_click
    :prog: mkMITgcmEXF
    :nested: full
 ```
-
 Example:
 
 ```{termynal}
