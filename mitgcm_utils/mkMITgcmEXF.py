@@ -106,5 +106,7 @@ def from_wrf(
         ds1[name].values.astype(">f4").tofile(binfile)
 
 
+app_click = typer.main.get_command(app)
+
 if __name__ == "__main__":
     app()
