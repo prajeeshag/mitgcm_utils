@@ -7,7 +7,8 @@ This project is under active development.
 :::
 
 ```{toctree}
-usage
+installation
+mkMITgcmEXF
 ```
 
 % ..    :maxdepth: 2

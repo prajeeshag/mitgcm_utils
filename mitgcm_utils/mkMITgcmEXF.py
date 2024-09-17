@@ -48,12 +48,12 @@ def from_wrf(
 ):
     """
     Create MITGCM external forcing files from WRF output.
-    - Creates a land sea mask (LSM) file from the geo_em file (if specified) or the first WRF output file.
-    - Merges the WRF output files and applies the sellonlatbox operation if specified.
-    - Infer the time interval in seconds from the time difference between the first two time steps.
-    - Compute the time difference quantities of accumulated fields.
-    - Mask the land points and extrapolate it with the nearest neighbor method for T2, Q2 and PSFC
-    - Writes the resulting data to MITgcm compatible binary files with the specified suffix.
+        - Creates a land sea mask (LSM) file from the geo_em file (if specified) or the first WRF output file.
+        - Merges the WRF output files and applies the sellonlatbox operation if specified.
+        - Infer the time interval in seconds from the time difference between the first two time steps.
+        - Compute the time difference quantities of accumulated fields.
+        - Mask the land points and extrapolate it with the nearest neighbor method for T2, Q2 and PSFC
+        - Writes the resulting data to MITgcm compatible binary files with the specified suffix.
     Note: The first time step is dropped since it is used only to compute the time difference quatities of accumulated fields.
     """
 
@@ -61,11 +61,11 @@ def from_wrf(
 
     if geo_em_file:
         lsm_file = ocean_mask_from_geo_em(geo_em_file)
-        if sellonlatbox:
-            lsm_file = cdo.sellonlatbox(sellonlatbox, input=lsm_file)
+        if lonlatbox:
+            lsm_file = cdo.sellonlatbox(lonlatbox, input=lsm_file)
     else:
         sellonlatbox_operation = (
-            f" -sellonlatbox,{sellonlatbox}" if sellonlatbox else ""
+            f" -sellonlatbox,{lonlatbox}" if lonlatbox else ""
         )
         lsm_file = cdo.eqc(
             "2", input=f" -selvar,XLAND {sellonlatbox_operation} {wrf_output_files[0]}"
@@ -73,7 +73,7 @@ def from_wrf(
 
     file_list_string = " ".join(wrf_output_files)
 
-    sellonlatbox_operation = f" -sellonlatbox,{sellonlatbox} :" if sellonlatbox else ""
+    sellonlatbox_operation = f" -sellonlatbox,{lonlatbox} :" if lonlatbox else ""
     masked_field_file = cdo.fillmiss2(
         input=f" -ifthen {lsm_file} -mergetime -select,name=PSFC,T2,Q2 [ {sellonlatbox_operation} {file_list_string} ]"
     )

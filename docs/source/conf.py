@@ -18,7 +18,7 @@ author = "Prajeesh Ag"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 
-sys.path.append(os.path.abspath("../"))
+sys.path.append(os.path.abspath("../../"))
 
 extensions = [
     "sphinx_copybutton",
@@ -30,7 +30,7 @@ extensions = [
 ]
 
 # autodoc_mock_imports = ["f90nml", "xarray", "xesmf", "numpy", "matplotlib", "cartopy"]
-click_mock_imports = [
+autodoc_mock_imports = [
     "sphericalpolygon",
     "f90nml",
     "xarray",

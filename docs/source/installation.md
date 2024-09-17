@@ -1,5 +1,3 @@
-(installation)=
-
 # Installation
 
 Clone the github repository
@@ -25,10 +23,3 @@ You can use `conda` or `mamba` in place of `micromamba`. I prefer `micromamba`, 
 - Refer [Mamba documentation](https://mamba.readthedocs.io/en/latest/installation.html) for installing *mamba*
 :::
 
-# Usage
-
-```{eval-rst}
-.. click:: mitgcm_utils.mkMITgcmEXF:app_click
-   :prog: mkMITgcmEXF
-   :nested: full
-```
