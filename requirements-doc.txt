@@ -1,0 +1,8 @@
+sphinx
+sphinx-book-theme
+typer
+sphinx-click
+sphinx-copybutton
+docstring_parser
+myst-parser
+sphinx-design
