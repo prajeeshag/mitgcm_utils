@@ -6,3 +6,4 @@ sphinx-copybutton
 docstring_parser
 myst-parser
 sphinx-design
+sphinx_termynal

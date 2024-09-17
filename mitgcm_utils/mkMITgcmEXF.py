@@ -64,9 +64,7 @@ def from_wrf(
         if lonlatbox:
             lsm_file = cdo.sellonlatbox(lonlatbox, input=lsm_file)
     else:
-        sellonlatbox_operation = (
-            f" -sellonlatbox,{lonlatbox}" if lonlatbox else ""
-        )
+        sellonlatbox_operation = f" -sellonlatbox,{lonlatbox}" if lonlatbox else ""
         lsm_file = cdo.eqc(
             "2", input=f" -selvar,XLAND {sellonlatbox_operation} {wrf_output_files[0]}"
         )
@@ -101,8 +99,8 @@ def from_wrf(
     ds1 = ds1.drop_vars(["RAINNC"])
 
     for name in ds1.data_vars:
-        logger.info(f"Writing: {name}")
         binfile = f"{name}{suffix}"
+        logger.info(f"Writing: {binfile}")
         ds1[name].values.astype(">f4").tofile(binfile)
 
 

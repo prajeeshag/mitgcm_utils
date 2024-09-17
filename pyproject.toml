@@ -24,11 +24,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["mitgcm_utils"]
 exclude = ["test_data", "docs"]
 
 [project.scripts]
-mkMITgcmIC = "mitgcm_utils.mkMITgcmIC:app"
-mkMITgcmBC = "mitgcm_utils.mkMITgcmBC:app"
 mkMITgcmEXF = "mitgcm_utils.mkMITgcmEXF:app"
-diffNML = "skrips_utils.diffNML:app"

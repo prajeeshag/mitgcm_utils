@@ -24,9 +24,10 @@ extensions = [
     "sphinx_copybutton",
     # "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    "sphinx_click",    
+    "sphinx_click",
     "myst_parser",
     "sphinx_design",
+    "sphinx_termynal",
 ]
 
 # autodoc_mock_imports = ["f90nml", "xarray", "xesmf", "numpy", "matplotlib", "cartopy"]
