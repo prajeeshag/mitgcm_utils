@@ -1,5 +1,5 @@
 sphinx
-sphinx-book-theme
+sphinx_rtd_theme
 typer
 sphinx-click
 sphinx-copybutton

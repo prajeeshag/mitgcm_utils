@@ -1,8 +1,11 @@
-import numpy as np
-from pathlib import Path
-from typing import Dict
-import f90nml
+# type: ignore
 import logging
+import re
+from pathlib import Path
+from typing import Any
+
+import f90nml  # type: ignore
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -35,23 +38,23 @@ MITGCM_GRID_VARS = [
 ]
 
 
-class CaseInsensitiveDict(dict):
-    def __setitem__(self, key, value):
+class CaseInsensitiveDict(dict[str, Any]):
+    def __setitem__(self, key: str, value: Any):
         super().__setitem__(key.lower(), value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         return super().__getitem__(key.lower())
 
-    def __contains__(self, key):
+    def __contains__(self, key: str):
         return super().__contains__(key.lower())
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None):
         return super().get(key.lower(), default)
 
-    def setdefault(self, key, default=None):
+    def setdefault(self, key: str, default: Any = None):
         return super().setdefault(key.lower(), default)
 
-    def update(self, other=None, **kwargs):
+    def update(self, other: Any = None, **kwargs):
         if other:
             if isinstance(other, dict):
                 for key, value in other.items():
@@ -72,7 +75,9 @@ def load_bathy(bathy_file: Path, nx: int, ny: int):
     return z.reshape(ny, nx)
 
 
-def load_grid(grid_file: Path, nx: int, ny: int) -> Dict:
+def load_grid(
+    grid_file: Path, nx: int, ny: int
+) -> dict[str, np.ndarray[Any, np.dtype[Any]]]:
     nx1, ny1 = nx + 1, ny + 1
     nxy1 = nx1 * ny1
     fdata = np.fromfile(grid_file, ">f8")
@@ -88,7 +93,7 @@ def load_grid(grid_file: Path, nx: int, ny: int) -> Dict:
             f"nvars*(nx+1)*(ny+1) != shape of the data read: {nele1} != {nele}"
         )
     fdata = fdata.reshape([nvars, ny1, nx1])
-    gridA = {}
+    gridA: dict[str, np.ndarray[Any, np.dtype[Any]]] = {}
     for i in range(nvars):
         gridA[MITGCM_GRID_VARS[i]] = fdata[i, :, :]
     return gridA
@@ -115,7 +120,7 @@ def vgrid_from_parm04(nml_file):
         logger.error("delr does not exist in &parm04. trying delz")
         try:
             delz = np.array(nml["delz"])
-        except KeyError:
+        except KeyError as e:
             logger.error("delr and delz does not exist in &parm04")
             raise e
 
@@ -124,10 +129,11 @@ def vgrid_from_parm04(nml_file):
         zi.append(zi[-1] + dz)
 
     z = np.array(zi[1:]) - delz * 0.5
-    return z, zi, delz
+    return z
 
 
 def fill_missing3D(arr):
+    print(arr.shape)
     for i in range(arr.shape[0]):
         arr2D = arr[i, :, :]
         if np.all(np.isnan(arr2D)):
@@ -170,3 +176,36 @@ def fill_missing2D(arr):
                     break
             if not np.isnan(arr[r, c]):
                 break
+
+
+def get_dimlist_from_meta_file(fname: Path) -> list[list[int]]:
+    """Get the dimList out of the MITgcm mds .meta file."""
+    flds: dict[str, Any] = {}
+    with open(fname) as f:
+        text = f.read()
+    # split into items
+    for item in re.split(";", text):
+        # remove whitespace at beginning
+        item = re.sub(r"^\s+", "", item)
+        match = re.match(r"(\w+) = (\[|\{)(.*)(\]|\})", item, re.DOTALL)
+        if match:
+            key, _, value, _ = match.groups()
+            # remove more whitespace
+            value = re.sub(r"^\s+", "", value)
+            value = re.sub(r"\s+$", "", value)
+            # print key,':', value
+            flds[key] = value
+    # now check the needed things are there
+    needed_keys = ["dimList"]
+    for k in needed_keys:
+        assert k in flds
+    dimList: list[list[int]] = [
+        [int(h) for h in re.split(",", g)] for g in re.split(",\n", flds["dimList"])
+    ]
+    return dimList
+
+
+if __name__ == "__main__":
+    print(get_dimlist_from_meta_file(Path("test_data/grid_data/XC.meta")))
+    print(get_dimlist_from_meta_file(Path("test_data/grid_data/RC.meta")))
+    print(get_dimlist_from_meta_file(Path("test_data/grid_data/hFacC.meta")))

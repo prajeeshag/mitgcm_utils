@@ -1,23 +1,31 @@
 import logging
-from pathlib import Path
-from typing import List
-
 import tempfile
+from enum import Enum
+from pathlib import Path
+from typing import Any
+
 import numpy as np
-import xarray as xr
 import typer
-from cdo import Cdo
+import xarray as xr
+from cdo import Cdo  # type: ignore
 
 from .utils import (
-    fill_missing2D,
-    load_grid,
+    fill_missing2D,  # type: ignore
+    fill_missing3D,  # type: ignore
+    get_dimlist_from_meta_file,
     load_bathy,
-    fill_missing3D,
-    vgrid_from_parm04,
+    load_grid,
+    vgrid_from_parm04,  # type: ignore
 )
 
+app = typer.Typer(add_completion=False, pretty_exceptions_show_locals=False)
 
-app = typer.Typer(add_completion=False)
+
+class Boundary(str, Enum):
+    south = "S"
+    north = "N"
+    east = "E"
+    west = "W"
 
 
 BNDDEF = {
@@ -51,29 +59,62 @@ def gen_bnd_grid(mitgrid: Path, nx: int, ny: int, bathy_file: Path):
 
     omask = np.array(z.shape, dtype=int)
     omask = np.where(z < 0, 1, 0)
-    bndAct = []
+    return lat, lon, omask
+
+
+def mk_bnd_grid(
+    lat: np.ndarray[Any, np.dtype[Any]],
+    lon: np.ndarray[Any, np.dtype[Any]],
+    omask: np.ndarray[Any, np.dtype[Any]],
+    boundary: list[Boundary] = [],
+) -> list[tuple[str, str]]:
+    bndAct: list[tuple[str, str]] = []
+
     for bnd in BNDDEF:
+        if boundary and bnd not in boundary:
+            continue
+
         bndMask = omask[BNDDEF[bnd]]
-        isboundary = np.any(bndMask == 1)
-        logger.info(f"{bnd}: {isboundary}")
+        isboundary = np.any(bndMask != 0)
+        bndPoints = np.count_nonzero(bndMask)
+        logger.info(f"{bnd}: {isboundary}, {bndPoints}")
         if not isboundary:
             continue
+
         latitude = lat[BNDDEF[bnd]]
         longitude = lon[BNDDEF[bnd]]
+        valid_index_forword = -1
+        valid_index_reverse = -1
+        for i in range(bndMask.shape[0]):
+            i_r = bndMask.shape[0] - 1 - i
+            if bndMask[i, 0] != 0:
+                valid_index_forword = i
+            if bndMask[i_r, 0] != 0:
+                valid_index_reverse = i_r
+            if valid_index_forword != -1 and bndMask[i, 0] == 0:
+                longitude[i, 0] = longitude[valid_index_forword, 0]
+                latitude[i, 0] = latitude[valid_index_forword, 0]
+            if valid_index_reverse != -1 and bndMask[i_r, 0] == 0:
+                longitude[i_r, 0] = longitude[valid_index_reverse, 0]
+                latitude[i_r, 0] = latitude[valid_index_reverse, 0]
+
+        longitude = longitude.squeeze()
+        latitude = latitude.squeeze()
+        bndMask = bndMask.squeeze()
         ds_out = xr.Dataset(
             {
                 "lat": (
-                    ["y", "x"],
+                    ["y"],
                     latitude,
                     {"units": "degrees_north"},
                 ),
                 "lon": (
-                    ["y", "x"],
+                    ["y"],
                     longitude,
                     {"units": "degrees_east"},
                 ),
                 "da": (
-                    ["y", "x"],
+                    ["y"],
                     bndMask,
                     {"units": "1", "coordinates": "lat lon"},
                 ),
@@ -82,20 +123,18 @@ def gen_bnd_grid(mitgrid: Path, nx: int, ny: int, bathy_file: Path):
         encoding = {var: {"_FillValue": None} for var in ds_out.variables}
         with tempfile.NamedTemporaryFile(delete=False, suffix=".nc") as tmpfile:
             logger.info(f"Writing {bnd} boundary grid to file {tmpfile.name}")
-            ds_out.to_netcdf(tmpfile.name, encoding=encoding)
+            ds_out.to_netcdf(tmpfile.name, encoding=encoding)  # type: ignore
         bndAct.append((bnd, tmpfile.name))
-
     return bndAct
 
 
-@app.command()
-def make_bc(
-    varnm: str = typer.Option(help="Name of the variable in the input file"),
+@app.command(hidden=True)
+def igrid(
     input: str = typer.Option(
         help="""
         Input can be: \n
-         1. A NetCDF file. 
-         2. A valid cdo option which will generate a NetCDF file. 
+         1. A NetCDF file.
+         2. A valid cdo option which will generate a NetCDF file.
          e.g. "-mergetime input1.nc input2.nc input3.nc"
          """,
     ),
@@ -104,6 +143,13 @@ def make_bc(
     ),
     ny: int = typer.Option(
         help="Number of points in y-direction",
+    ),
+    field: str = typer.Option(
+        help="""Boundary field name, i.e. T, S, U, V,... \n
+            e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,..
+            For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively.
+            For all other fields Center grid coordinates of Arakawa-C will be used.
+            """,
     ),
     bathymetry: Path = typer.Option(
         default=Path("./bathymetry.bin"),
@@ -123,9 +169,55 @@ def make_bc(
         dir_okay=False,
         help="Path to the MITgcm data namelist file",
     ),
-    ovarnm: str = typer.Option(
-        default=None,
-        help="Name of the variable in the boundary filenames i.e. obE_<ovarnm>.bin. [default: varnm]",
+    addc: float = typer.Option(
+        default=0.0,
+        help="Add a constant to the input field",
+    ),
+    mulc: float = typer.Option(
+        default=1.0,
+        help="Multiply a constant to the input field",
+    ),
+):
+    """
+    Use input grid informations from namelist and bathymetry file to generate MITgcm boundary conditions
+    """
+    z = vgrid_from_parm04(nml)
+
+    # generate boundary grids
+    lat, lon, omask = gen_bnd_grid(mitgrid, nx, ny, bathymetry)
+
+    mk_obcs(input, field, addc, mulc, z, lat, lon, omask)  # type: ignore
+
+
+@app.command()
+def mds(
+    input: str = typer.Option(
+        help="""
+            Input can be: \n
+             1. A CF-compliant NetCDF file. \n 
+             2. A valid cdo option which will generate a NetCDF file. \n 
+             e.g. "-mergetime input1.nc input2.nc input3.nc"
+             """,
+    ),
+    field: str = typer.Option(
+        help="""Boundary field name, i.e. T, S, U, V,... \n
+            e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,.. \n
+            For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively. \n
+            For all other fields Center grid coordinates of Arakawa-C will be used. \n
+            """,
+    ),
+    grid_path: Path = typer.Option(
+        default=Path("./"),
+        exists=True,
+        dir_okay=True,
+        help="Directory path where grid info mds files are",
+    ),
+    boundary: list[Boundary] = typer.Option(
+        default=[],
+        help="""
+            boundary; can be defined multiple times \n
+            e.g. --boundary S --boundary N --boundary E 
+            """,
     ),
     addc: float = typer.Option(
         default=0.0,
@@ -137,61 +229,114 @@ def make_bc(
     ),
 ):
     """
-    Generate boundary conditions for MITgcm from a CF-compliant Netcdf data
-    It assume that the levels are in meters and is from top to bottom
+    Use input grid informations from grid info mds (XC,YC,RC,hFacC,...) files to generate MITgcm boundary conditions.
+    The input file must be a CF-compliant NetCDF file and should contain a single data variable.
+    If the input file contains multiple data variables, please use cdo operator "-selvar" to select a single data variable.
+    Example: \n
+    - mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field T --boundary E --input "-mergetime [ input_data_*.nc ]" \n
+    - mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field U --boundary E --boundary N --input "-selvar,uvel input_data.nc"
     """
-    cdo = Cdo(tempdir='tmp/')
-    if nml is None:
-        nml = Path("data")
-    z, _, _ = vgrid_from_parm04(nml)
+
+    mask_file = grid_path / "hFacC.data"
+    lat_file = grid_path / "YC.data"
+    lon_file = grid_path / "XC.data"
+    depth_file = grid_path / "RC.data"
+    if field == "U":
+        mask_file = grid_path / "hFacW.data"
+        lon_file = grid_path / "XG.data"
+    elif field == "V":
+        mask_file = grid_path / "hFacC.data"
+        lat_file = grid_path / "YG.data"
+
+    dimList = get_dimlist_from_meta_file(mask_file.with_suffix(".meta"))
+    nx = dimList[0][0]
+    ny = dimList[1][0]
+    nz = dimList[2][0]
+
+    logger.info(f"Grid size: nx, ny, nz = {nx} {ny} {nz}")
+    logger.info(f"Reading grid longitudes from {lon_file}")
+    lon = np.fromfile(lon_file, ">f4").reshape(ny, nx)
+    logger.info(f"Reading grid latitudes from {lat_file}")
+    lat = np.fromfile(lat_file, ">f4").reshape(ny, nx)
+    logger.info(f"Reading grid depths from {depth_file}")
+    z = np.fromfile(depth_file, ">f4").reshape(nz) * -1
+    logger.info(f"Reading ocean mask from {mask_file}")
+    omask3d = np.fromfile(mask_file, ">f4").reshape(nz, ny, nx)
+    omask3d = np.where(omask3d != 0, 1, 0)
+    omask = omask3d[0, :, :]
+
+    bndDict = mk_obcs(input, addc, mulc, z, lat, lon, omask, boundary)
+    for bnd, arr in bndDict.items():
+        out_file = f"{field}_{bnd}.bin"
+        omask = omask3d[:, BNDDEF[bnd][0], BNDDEF[bnd][1]].squeeze()
+        arr.values = arr.values * omask  # type: ignore
+        logger.info(f"Writing {out_file}")
+        arr.values.astype(">f4").tofile(out_file)  # type: ignore
+
+
+def mk_obcs(
+    input: str,
+    addc: float,
+    mulc: float,
+    z: np.ndarray[Any, np.dtype[Any]],
+    lat: np.ndarray[Any, np.dtype[Any]],
+    lon: np.ndarray[Any, np.dtype[Any]],
+    omask: np.ndarray[Any, np.dtype[Any]],
+    boundary: list[Boundary] = [],
+) -> dict[str, xr.DataArray]:
+    """Generate MITgcm boundary conditions"""
+    res: dict[str, xr.DataArray] = {}
+    bndAct = mk_bnd_grid(lat, lon, omask, boundary)
     levels = ",".join(["{:.3f}".format(i) for i in z])
-
-    # generate boundary grids
-    bndAct = gen_bnd_grid(mitgrid, nx, ny, bathymetry)
-
+    cdo = Cdo(tempdir="tmp/", options=["-f", "nc"])  # type: ignore
     for bnd, gridfile in bndAct:
         logger.info(f"Processing {bnd} boundary")
 
-        cdoOpr1 = f" -selvar,{varnm} {input} "
-        cdoOpr2 = f" -setlevel,0 -sellevidx,1 " + cdoOpr1
-        cdoOpr1 = f" -merge " + cdoOpr2 + cdoOpr1
-        cdoOpr1 = f" -remapnn,{gridfile} " + cdoOpr1
-        cdoOpr1 = f" -mulc,{mulc} -addc,{addc} " + cdoOpr1
-        cdoOpr = f" -intlevel,{levels} " + cdoOpr1
-        logger.info(f"CDO operation: {cdoOpr}")
+        cdoOpr1 = input
+        cdoOpr2 = f" -setlevel,0 -sellevidx,1 {cdoOpr1}"
+        cdoOpr1 = f" -merge {cdoOpr2} {cdoOpr1}"
+        cdoOpr1 = f" -remapnn,{gridfile} {cdoOpr1}"
+        cdoOpr1 = f" -intlevel,{levels} " + cdoOpr1
+        cdoOpr1 = f" -vertfillmiss {cdoOpr1}"
+        cdoOpr1 = f" -setmisstonn {cdoOpr1}"
+        cdoOpr1 = f" -addc,{addc} {cdoOpr1}"
+        logger.info(f"CDO operation: {cdoOpr1}")
 
-        arr = cdo.fillmiss2(input=cdoOpr, returnXArray=varnm)
-
+        out_file = cdo.mulc(mulc, input=cdoOpr1, output="out.nc")  # type: ignore
+        ds = xr.open_dataset(out_file, decode_times=False, engine="netcdf4")  # type: ignore
+        arr = get_data_array(ds)
         arr = arr.squeeze()
-
         shape = arr.shape
         is2D = len(shape) == 2
-
-        if np.any(np.isnan(arr.values)):
-            logger.info(f"NaN Values present in the boundary {bnd} conditions")
+        field = arr.name  # type: ignore
+        out_file = f"{field} at {bnd} boundary"
+        if np.any(np.isnan(arr.values)):  # type: ignore
+            logger.info(f"NaN Values present in {out_file}")
             logger.info("Trying to fill NaN Values with Nearest Neighbhour")
             if is2D:
-                fill_missing2D(arr.values)
+                fill_missing2D(arr.values)  # type: ignore
             else:
-                fill_missing3D(arr.values)
+                fill_missing3D(arr.values)  # type: ignore
 
-        if np.any(np.isnan(arr.values)):
-            raise RuntimeError(f"Nan Values present in the boundary {bnd} conditions")
+        if np.any(np.isnan(arr.values)):  # type: ignore
+            raise RuntimeError(f"Nan Values present in {out_file}")
 
-        if ovarnm is None:
-            ovarnm = varnm
-        out_file = f"ob{bnd}_{ovarnm}.bin"
+        logger.info(f"Shape of {out_file} is {arr.shape}")
+        logger.info(f"Maximum value of {out_file} is {arr.values.max()}")  # type: ignore
+        logger.info(f"Minimum value of {out_file} is {arr.values.min()}")  # type: ignore
 
-        logger.info(f"Shape of {bnd} boundary for {varnm} is {arr.shape}")
-        logger.info(
-            f"Maximum value of {bnd} boundary for {varnm} is {arr.values.max()}"
+        res[bnd] = arr
+    return res
+
+
+def get_data_array(dset: xr.Dataset) -> xr.DataArray:
+    data_vars: list[str] = list(dset.data_vars)
+    if len(data_vars) == 1:
+        return dset[data_vars[0]]  # type: ignore
+    else:
+        raise ValueError(
+            "The dataset contains multiple data variables. Use cdo -selvar to select a single variable"
         )
-        logger.info(
-            f"Minimum value of {bnd} boundary for {varnm} is {arr.values.min()}"
-        )
-        logger.info(f"Writing {bnd} boundary for {varnm} to {out_file}")
-
-        arr.values.astype(">f4").tofile(out_file)
 
 
 app_click = typer.main.get_command(app)

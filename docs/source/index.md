@@ -9,6 +9,7 @@ This project is under active development.
 ```{toctree}
 installation
 mkMITgcmEXF
+mkMITgcmBC
 ```
 
 % ..    :maxdepth: 2

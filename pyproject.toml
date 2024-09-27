@@ -4,23 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mitgcm_utils"
-authors = [{name = "Prajeesh Ag", email = "prajeeshag@gmail.com"}]
+authors = [{ name = "Prajeesh Ag", email = "prajeeshag@gmail.com" }]
 dynamic = ["version"]
 description = "Command line tools for MITgcm"
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-"numpy",
-"xarray",
-"netcdf4",
-"f90nml",
-"cdo",
-"typer",
-"scipy",
-"matplotlib",
-"pandas",
-"xlsxwriter",
+    "numpy",
+    "xarray",
+    "netcdf4",
+    "f90nml",
+    "cdo",
+    "typer",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "xlsxwriter",
 ]
 
 [tool.setuptools.packages.find]
@@ -28,3 +28,4 @@ exclude = ["test_data", "docs"]
 
 [project.scripts]
 mkMITgcmEXF = "mitgcm_utils.mkMITgcmEXF:app"
+mkMITgcmBC = "mitgcm_utils.mkMITgcmBC:app"

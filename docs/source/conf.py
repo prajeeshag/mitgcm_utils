@@ -3,9 +3,8 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import sys
 import os
-
+import sys
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -28,6 +27,7 @@ extensions = [
     "myst_parser",
     "sphinx_design",
     "sphinx_termynal",
+    "sphinx_rtd_theme",
 ]
 
 # autodoc_mock_imports = ["f90nml", "xarray", "xesmf", "numpy", "matplotlib", "cartopy"]
@@ -54,7 +54,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_book_theme"
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "

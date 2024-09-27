@@ -4,5 +4,5 @@ channels:
   - defaults
 dependencies:
   - python=3.10
-  - cdo
+  - cdo=2.4.4
   - pip 
