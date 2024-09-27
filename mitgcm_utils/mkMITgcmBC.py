@@ -18,7 +18,7 @@ from .utils import (
     vgrid_from_parm04,  # type: ignore
 )
 
-app = typer.Typer(add_completion=False)
+app = typer.Typer(add_completion=False, pretty_exceptions_show_locals=False)
 
 
 class Boundary(str, Enum):
@@ -66,12 +66,12 @@ def mk_bnd_grid(
     lat: np.ndarray[Any, np.dtype[Any]],
     lon: np.ndarray[Any, np.dtype[Any]],
     omask: np.ndarray[Any, np.dtype[Any]],
-    boundaries: list[Boundary] = [],
+    boundary: list[Boundary] = [],
 ) -> list[tuple[str, str]]:
     bndAct: list[tuple[str, str]] = []
 
     for bnd in BNDDEF:
-        if boundaries and bnd not in boundaries:
+        if boundary and bnd not in boundary:
             continue
 
         bndMask = omask[BNDDEF[bnd]]
@@ -147,6 +147,8 @@ def igrid(
     field: str = typer.Option(
         help="""Boundary field name, i.e. T, S, U, V,... \n
             e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,..
+            For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively.
+            For all other fields Center grid coordinates of Arakawa-C will be used.
             """,
     ),
     bathymetry: Path = typer.Option(
@@ -192,13 +194,17 @@ def mds(
     input: str = typer.Option(
         help="""
             Input can be: \n
-             1. A NetCDF file. \n 
+             1. A CF-compliant NetCDF file. \n 
              2. A valid cdo option which will generate a NetCDF file. \n 
              e.g. "-mergetime input1.nc input2.nc input3.nc"
              """,
     ),
     field: str = typer.Option(
-        help="field to be added to the output files, i.e. <field>_E.bin, <field>_W.bin,..",
+        help="""Boundary field name, i.e. T, S, U, V,... \n
+            e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,.. \n
+            For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively. \n
+            For all other fields Center grid coordinates of Arakawa-C will be used. \n
+            """,
     ),
     grid_path: Path = typer.Option(
         default=Path("./"),
@@ -206,9 +212,12 @@ def mds(
         dir_okay=True,
         help="Directory path where grid info mds files are",
     ),
-    boundaries: list[Boundary] = typer.Option(
+    boundary: list[Boundary] = typer.Option(
         default=[],
-        help="A list of Boundaries",
+        help="""
+            boundary; can be defined multiple times \n
+            e.g. --boundary S --boundary N --boundary E 
+            """,
     ),
     addc: float = typer.Option(
         default=0.0,
@@ -220,7 +229,12 @@ def mds(
     ),
 ):
     """
-    Use input grid informations from grid info mds (XC,YC,RC,hFacC,...) files to generate MITgcm boundary conditions
+    Use input grid informations from grid info mds (XC,YC,RC,hFacC,...) files to generate MITgcm boundary conditions.
+    The input file must be a CF-compliant NetCDF file and should contain a single data variable.
+    If the input file contains multiple data variables, please use cdo operator "-selvar" to select a single data variable.
+    Example: \n
+    - mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field T --boundary E --input "-mergetime [ input_data_*.nc ]" \n
+    - mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field U --boundary E --boundary N --input "-selvar,uvel input_data.nc"
     """
 
     mask_file = grid_path / "hFacC.data"
@@ -251,7 +265,7 @@ def mds(
     omask3d = np.where(omask3d != 0, 1, 0)
     omask = omask3d[0, :, :]
 
-    bndDict = mk_obcs(input, addc, mulc, z, lat, lon, omask, boundaries)
+    bndDict = mk_obcs(input, addc, mulc, z, lat, lon, omask, boundary)
     for bnd, arr in bndDict.items():
         out_file = f"{field}_{bnd}.bin"
         omask = omask3d[:, BNDDEF[bnd][0], BNDDEF[bnd][1]].squeeze()
@@ -268,11 +282,11 @@ def mk_obcs(
     lat: np.ndarray[Any, np.dtype[Any]],
     lon: np.ndarray[Any, np.dtype[Any]],
     omask: np.ndarray[Any, np.dtype[Any]],
-    boundaries: list[Boundary] = [],
+    boundary: list[Boundary] = [],
 ) -> dict[str, xr.DataArray]:
     """Generate MITgcm boundary conditions"""
     res: dict[str, xr.DataArray] = {}
-    bndAct = mk_bnd_grid(lat, lon, omask, boundaries)
+    bndAct = mk_bnd_grid(lat, lon, omask, boundary)
     levels = ",".join(["{:.3f}".format(i) for i in z])
     cdo = Cdo(tempdir="tmp/", options=["-f", "nc"])  # type: ignore
     for bnd, gridfile in bndAct:
