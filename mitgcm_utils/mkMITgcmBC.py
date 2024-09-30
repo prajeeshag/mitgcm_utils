@@ -302,7 +302,7 @@ def mk_obcs(
         cdoOpr1 = f" -addc,{addc} {cdoOpr1}"
         logger.info(f"CDO operation: {cdoOpr1}")
 
-        out_file = cdo.mulc(mulc, input=cdoOpr1, output="out.nc")  # type: ignore
+        out_file = cdo.mulc(mulc, input=cdoOpr1)  # type: ignore
         ds = xr.open_dataset(out_file, decode_times=False, engine="netcdf4")  # type: ignore
         arr = get_data_array(ds)
         arr = arr.squeeze()
