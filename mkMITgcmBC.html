@@ -28,6 +28,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="beditor" href="beditor.html" />
     <link rel="prev" title="mkMITgcmEXF" href="mkMITgcmEXF.html" /> 
 </head>
 
@@ -57,6 +58,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#mkmitgcmbc-mds">mds</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="beditor.html">beditor</a></li>
 </ul>
 
         </div>
@@ -75,7 +77,7 @@
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">mkMITgcmBC</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/mkMITgcmBC.md.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/mkMITgcmBC.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -92,11 +94,11 @@
 <h2>mds<a class="headerlink" href="#mkmitgcmbc-mds" title="Link to this heading"></a></h2>
 <p>Use input grid informations from grid info mds (XC,YC,RC,hFacC,…) files to generate MITgcm boundary conditions.
 The input file must be a CF-compliant NetCDF file and should contain a single data variable.
-If the input file contains multiple data variables, please use cdo operator “-selvar” to select a single data variable.
+If the input file contains multiple data variables, use cdo operator “-selvar” to select a single data variable.
 Example:</p>
 <ul class="simple">
-<li><p>mkMITgcmBC mds –grid-path mds_grid_info_files_directory_path/ –field T –boundary E –input “-mergetime [ input_data_*.nc ]”</p></li>
-<li><p>mkMITgcmBC mds –grid-path mds_grid_info_files_directory_path/ –field U –boundary E –boundary N –input “-selvar,uvel input_data.nc”</p></li>
+<li><p><cite>mkMITgcmBC mds –grid-path mds_grid_info_files_directory_path/ –field T –boundary E –input “-mergetime [ input_data_*.nc ]”</cite></p></li>
+<li><p><cite>mkMITgcmBC mds –grid-path mds_grid_info_files_directory_path/ –field U –boundary E –boundary N –input “-selvar,uvel input_data.nc”</cite></p></li>
 </ul>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mkMITgcmBC<span class="w"> </span>mds<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
@@ -179,6 +181,7 @@ Example:</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="mkMITgcmEXF.html" class="btn btn-neutral float-left" title="mkMITgcmEXF" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="beditor.html" class="btn btn-neutral float-right" title="beditor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

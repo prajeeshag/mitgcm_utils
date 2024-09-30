@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>beditor &mdash; MITGCM Utils</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/termynal.css" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=30646c52"></script>
+        <script defer="defer" src="_static/termynal.js"></script>
+        <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="mkMITgcmBC" href="mkMITgcmBC.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            mitgcm_utils
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mkMITgcmEXF.html">mkMITgcmEXF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mkMITgcmBC.html">mkMITgcmBC</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">beditor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#beditor-clip-bathy">clip-bathy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#beditor-del-creeks">del_creeks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#beditor-del-islands">del_islands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#beditor-del-ponds">del_ponds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#beditor-edit-bathy">edit_bathy</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mitgcm_utils</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">beditor</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/beditor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="beditor">
+<h1>beditor<a class="headerlink" href="#beditor" title="Link to this heading"></a></h1>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>beditor<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-install-completion">
+<span class="sig-name descname"><span class="pre">--install-completion</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-beditor-install-completion" title="Link to this definition"></a></dt>
+<dd><p>Install completion for the current shell.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-show-completion">
+<span class="sig-name descname"><span class="pre">--show-completion</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-beditor-show-completion" title="Link to this definition"></a></dt>
+<dd><p>Show completion for the current shell, to copy it or customize the installation.</p>
+</dd></dl>
+
+<section id="beditor-clip-bathy">
+<h2>clip-bathy<a class="headerlink" href="#beditor-clip-bathy" title="Link to this heading"></a></h2>
+<p>Clip the bathymetry of MITgcm between min and max values.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>beditor<span class="w"> </span>clip-bathy<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BATHY_FILE
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-clip-bathy-mindepth">
+<span class="sig-name descname"><span class="pre">--mindepth</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mindepth&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-clip-bathy-mindepth" title="Link to this definition"></a></dt>
+<dd><p>Minimum depth (-ve downwards), z[z &gt; mindepth]=landvalue</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-5</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-clip-bathy-maxdepth">
+<span class="sig-name descname"><span class="pre">--maxdepth</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;maxdepth&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-clip-bathy-maxdepth" title="Link to this definition"></a></dt>
+<dd><p>Maximum depth (-ve downwards), z[z &lt; maxdepth]= maxdepth</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-clip-bathy-landvalue">
+<span class="sig-name descname"><span class="pre">--landvalue</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;landvalue&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-clip-bathy-landvalue" title="Link to this definition"></a></dt>
+<dd><p>Land value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">100.0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-clip-bathy-arg-BATHY_FILE">
+<span class="sig-name descname"><span class="pre">BATHY_FILE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-beditor-clip-bathy-arg-BATHY_FILE" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+<p>MITgcm bathymetry file</p>
+</dd></dl>
+
+</section>
+<section id="beditor-del-creeks">
+<h2>del_creeks<a class="headerlink" href="#beditor-del-creeks" title="Link to this heading"></a></h2>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>beditor<span class="w"> </span>del_creeks<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_creeks-bathy-file">
+<span class="sig-name descname"><span class="pre">--bathy-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;bathy_file&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_creeks-bathy-file" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_creeks-nx">
+<span class="sig-name descname"><span class="pre">--nx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;nx&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_creeks-nx" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_creeks-ny">
+<span class="sig-name descname"><span class="pre">--ny</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ny&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_creeks-ny" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_creeks-n-points">
+<span class="sig-name descname"><span class="pre">--n-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n_points&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_creeks-n-points" title="Link to this definition"></a></dt>
+<dd><p>Only consider features having grid points &lt;= <cite>n_points</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="beditor-del-islands">
+<h2>del_islands<a class="headerlink" href="#beditor-del-islands" title="Link to this heading"></a></h2>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>beditor<span class="w"> </span>del_islands<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_islands-bathy-file">
+<span class="sig-name descname"><span class="pre">--bathy-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;bathy_file&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_islands-bathy-file" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_islands-nx">
+<span class="sig-name descname"><span class="pre">--nx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;nx&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_islands-nx" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_islands-ny">
+<span class="sig-name descname"><span class="pre">--ny</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ny&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_islands-ny" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_islands-n-points">
+<span class="sig-name descname"><span class="pre">--n-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n_points&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_islands-n-points" title="Link to this definition"></a></dt>
+<dd><p>Only consider features having grid points &lt;= <cite>n_points</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="beditor-del-ponds">
+<h2>del_ponds<a class="headerlink" href="#beditor-del-ponds" title="Link to this heading"></a></h2>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>beditor<span class="w"> </span>del_ponds<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_ponds-bathy-file">
+<span class="sig-name descname"><span class="pre">--bathy-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;bathy_file&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_ponds-bathy-file" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_ponds-nx">
+<span class="sig-name descname"><span class="pre">--nx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;nx&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_ponds-nx" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_ponds-ny">
+<span class="sig-name descname"><span class="pre">--ny</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ny&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_ponds-ny" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-del_ponds-n-points">
+<span class="sig-name descname"><span class="pre">--n-points</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;n_points&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-del_ponds-n-points" title="Link to this definition"></a></dt>
+<dd><p>Only consider features having grid points &lt;= <cite>n_points</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="beditor-edit-bathy">
+<h2>edit_bathy<a class="headerlink" href="#beditor-edit-bathy" title="Link to this heading"></a></h2>
+<p>Opens up a GUI to click and edit Bathymetry</p>
+<p>Keys:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a: average</p></li>
+<li><p>d: deepen</p></li>
+<li><p>l: land</p></li>
+<li><p>o: ocean</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>beditor<span class="w"> </span>edit_bathy<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-edit_bathy-bathy-file">
+<span class="sig-name descname"><span class="pre">--bathy-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;bathy_file&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-edit_bathy-bathy-file" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-edit_bathy-nx">
+<span class="sig-name descname"><span class="pre">--nx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;nx&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-edit_bathy-nx" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-beditor-edit_bathy-ny">
+<span class="sig-name descname"><span class="pre">--ny</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ny&gt;</span></span><a class="headerlink" href="#cmdoption-beditor-edit_bathy-ny" title="Link to this definition"></a></dt>
+<dd><p><strong>Required</strong></p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mkMITgcmBC.html" class="btn btn-neutral float-left" title="mkMITgcmBC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Prajeesh Ag.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
