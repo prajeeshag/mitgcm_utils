@@ -10,6 +10,7 @@ This project is under active development.
 installation
 mkMITgcmEXF
 mkMITgcmBC
+beditor
 ```
 
 % ..    :maxdepth: 2

@@ -20,7 +20,7 @@ dependencies = [
     "scipy",
     "matplotlib",
     "pandas",
-    "xlsxwriter",
+    "mpl_interactions",
 ]
 
 [tool.setuptools.packages.find]
@@ -29,3 +29,4 @@ exclude = ["test_data", "docs"]
 [project.scripts]
 mkMITgcmEXF = "mitgcm_utils.mkMITgcmEXF:app"
 mkMITgcmBC = "mitgcm_utils.mkMITgcmBC:app"
+beditor = "mitgcm_utils.beditor:app"
