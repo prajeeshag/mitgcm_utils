@@ -180,3 +180,6 @@ matlab_codes
 *.bin
 *.nc
 *.png
+
+.DS_Store
+

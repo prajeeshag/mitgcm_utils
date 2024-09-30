@@ -231,10 +231,10 @@ def mds(
     """
     Use input grid informations from grid info mds (XC,YC,RC,hFacC,...) files to generate MITgcm boundary conditions.
     The input file must be a CF-compliant NetCDF file and should contain a single data variable.
-    If the input file contains multiple data variables, please use cdo operator "-selvar" to select a single data variable.
+    If the input file contains multiple data variables, use cdo operator "-selvar" to select a single data variable.
     Example: \n
-    - mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field T --boundary E --input "-mergetime [ input_data_*.nc ]" \n
-    - mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field U --boundary E --boundary N --input "-selvar,uvel input_data.nc"
+    - `mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field T --boundary E --input "-mergetime [ input_data_*.nc ]"` \n
+    - `mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field U --boundary E --boundary N --input "-selvar,uvel input_data.nc"`
     """
 
     mask_file = grid_path / "hFacC.data"
