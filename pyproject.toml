@@ -21,6 +21,7 @@ dependencies = [
     "matplotlib",
     "pandas",
     "mpl_interactions",
+    "pyqt5",
 ]
 
 [tool.setuptools.packages.find]
@@ -29,4 +30,4 @@ exclude = ["test_data", "docs"]
 [project.scripts]
 mkMITgcmEXF = "mitgcm_utils.mkMITgcmEXF:app"
 mkMITgcmBC = "mitgcm_utils.mkMITgcmBC:app"
-beditor = "mitgcm_utils.beditor:app"
+beditor = "mitgcm_utils.beditor:main"

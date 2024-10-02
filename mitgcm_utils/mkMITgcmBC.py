@@ -236,6 +236,8 @@ def mds(
     - `mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field T --boundary E --input "-mergetime [ input_data_*.nc ]"` \n
     - `mkMITgcmBC mds --grid-path mds_grid_info_files_directory_path/ --field U --boundary E --boundary N --input "-selvar,uvel input_data.nc"`
     """
+    # TODO: Add option to specify Arakwa-C grid
+    # TODO: Add optional nx, ny, nz
 
     mask_file = grid_path / "hFacC.data"
     lat_file = grid_path / "YC.data"
@@ -291,6 +293,9 @@ def mk_obcs(
     cdo = Cdo(tempdir="tmp/", options=["-f", "nc"])  # type: ignore
     for bnd, gridfile in bndAct:
         logger.info(f"Processing {bnd} boundary")
+
+        # TODO: Make bilinear interpolation as default
+        # TODO: Add comments
 
         cdoOpr1 = input
         cdoOpr2 = f" -setlevel,0 -sellevidx,1 {cdoOpr1}"

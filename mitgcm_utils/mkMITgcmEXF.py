@@ -26,7 +26,10 @@ def from_era5(wrf_output_file: str):
 
 
 def ocean_mask_from_geo_em(geo_em: str) -> str:
+
     landusef = xr.open_dataset(geo_em)["LANDUSEF"][0, 16, :, :]  # type: ignore
+    print("test")
+    landusef.values[:, :] = np.where(landusef.values[:, :] >= 1, 1, 0)
     xlat = xr.open_dataset(geo_em)["XLAT_M"][0, :, :]  # type: ignore
     xlon = xr.open_dataset(geo_em)["XLONG_M"][0, :, :]  # type: ignore
     xlat.attrs["units"] = "degrees_north"
@@ -104,6 +107,10 @@ def from_wrf(
     Example:\n
         `mkMITgcmEXF from-wrf --lonlatbox 29.8,50.2,9.8,30.2 --geo-em-file geo_em.d01.nc wrfout_d01_*`
     """
+    # TODO - Ocean Mask
+    # TODO - Regrid if projections are different
+    # TODO - Create data.exf info
+    # TODO - Implement Time Step Offset
 
     cdo = Cdo(tempdir="tmp/", options=["-f", "nc"])
 
