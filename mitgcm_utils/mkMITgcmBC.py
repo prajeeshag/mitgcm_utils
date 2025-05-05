@@ -8,17 +8,23 @@ import numpy as np
 import typer
 import xarray as xr
 from cdo import Cdo  # type: ignore
+from scipy.ndimage import label  # type: ignore
 
 from .utils import (
+    _create_grid_file,
     fill_missing2D,  # type: ignore
     fill_missing3D,  # type: ignore
+    get_bathy,
     get_dimlist_from_meta_file,
+    get_hgrid,
     load_bathy,
-    load_grid,
+    read_mitgcm_grid,
     vgrid_from_parm04,  # type: ignore
 )
 
 app = typer.Typer(add_completion=False, pretty_exceptions_show_locals=False)
+
+cdo = Cdo(tempdir="tmp/", options=["-f", "nc"])  # type: ignore
 
 
 class Boundary(str, Enum):
@@ -47,19 +53,58 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def gen_bnd_grid(mitgrid: Path, nx: int, ny: int, bathy_file: Path):
+def get_bnd_grid(run_dir: str, nx: int, ny: int):  # type: ignore
     """Generate MITgcm boundary grid files later to be used to interpolate the boundary condition"""
 
     logger.info("Reading bathymetry and grid info")
 
-    gA = load_grid(mitgrid, nx, ny)
-    z = load_bathy(bathy_file, nx, ny)
-    lat = gA["yC"][:-1, :-1]
-    lon = gA["xC"][:-1, :-1]
+    grid_ds = get_hgrid(run_dir, nx, ny, as_ds=True)
+
+    z = get_bathy(run_dir, nx, ny)
+    lat = grid_ds["lat"].values  # type: ignore
+    lon = grid_ds["lon"].values  # type: ignore
 
     omask = np.array(z.shape, dtype=int)
     omask = np.where(z < 0, 1, 0)
-    return lat, lon, omask
+    return lat, lon, omask  # type: ignore
+
+
+def mk_bnd_basins(
+    lat: np.ndarray[Any, np.dtype[Any]],
+    lon: np.ndarray[Any, np.dtype[Any]],
+    omask: np.ndarray[Any, np.dtype[Any]],
+    boundary: list[Boundary] = [],
+) -> tuple[dict[int, str], list[str]]:
+    larray, num_features = label(omask)  # type: ignore
+
+    basin_mask_files: dict[int, str] = {}
+
+    bnd_feature_set: set[int] = set()
+    bndAct: list[str] = []
+
+    for bnd in BNDDEF:
+        if boundary and bnd not in boundary:
+            continue
+        bndMask = omask[BNDDEF[bnd]]
+        bndlarray = larray[BNDDEF[bnd]]  # type: ignore
+        features = np.sort(np.unique(bndlarray))  # type: ignore
+        isboundary = np.any(bndMask != 0)
+        bndPoints = np.count_nonzero(bndMask)
+        logger.info(f"{bnd}: {isboundary}, {bndPoints}")
+        if not isboundary:
+            continue
+        bndAct.append(bnd)
+        if len(features) == 1 and features[0] == 0:
+            raise RuntimeError(
+                "An open boundary contains no detected basin features (possible bug)!!"
+            )
+        bnd_feature_set.update(features[1:])
+
+    for feature in bnd_feature_set:
+        farray = np.where(larray == feature, 1, 0)  # type: ignore
+        basin_mask_files[int(feature)] = _create_grid_file(lon, lat, farray)
+
+    return basin_mask_files, bndAct
 
 
 def mk_bnd_grid(
@@ -128,7 +173,7 @@ def mk_bnd_grid(
     return bndAct
 
 
-@app.command(hidden=True)
+@app.command()
 def igrid(
     input: str = typer.Option(
         help="""
@@ -145,29 +190,24 @@ def igrid(
         help="Number of points in y-direction",
     ),
     field: str = typer.Option(
-        help="""Boundary field name, i.e. T, S, U, V,... \n
+        help="""Boundary field name, i.e. T, S, U, V, Eta... \n
             e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,..
             For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively.
             For all other fields Center grid coordinates of Arakawa-C will be used.
             """,
     ),
-    bathymetry: Path = typer.Option(
-        default=Path("./bathymetry.bin"),
+    run_dir: Path = typer.Option(
+        default=Path("./"),
         exists=True,
-        dir_okay=False,
-        help="Path to the MITgcm bathymetry file",
+        dir_okay=True,
+        help="Path to the MITgcm run directory where all neccesary files are present",
     ),
-    nml: Path = typer.Option(
-        default=Path("./data"),
-        exists=True,
-        dir_okay=False,
-        help="Path to the MITgcm `data` namelist file",
-    ),
-    mitgrid: Path = typer.Option(
-        default=Path("./tile001.mitgrid"),
-        exists=True,
-        dir_okay=False,
-        help="Path to the MITgcm data namelist file",
+    boundary: list[Boundary] = typer.Option(
+        default=[],
+        help="""
+            boundary; can be defined multiple times \n
+            e.g. --boundary S --boundary N --boundary E 
+            """,
     ),
     addc: float = typer.Option(
         default=0.0,
@@ -181,12 +221,25 @@ def igrid(
     """
     Use input grid informations from namelist and bathymetry file to generate MITgcm boundary conditions
     """
-    z = vgrid_from_parm04(nml)
+    nml = Path(run_dir) / "data"
 
     # generate boundary grids
-    lat, lon, omask = gen_bnd_grid(mitgrid, nx, ny, bathymetry)
+    lat, lon, omask = get_bnd_grid(run_dir, nx, ny)  # type: ignore
 
-    mk_obcs(input, field, addc, mulc, z, lat, lon, omask)  # type: ignore
+    if field == "Eta":
+        bndDict = mk_obcs_eta(input, addc, mulc, lat, lon, omask, boundary)  # type: ignore
+        for bnd, arr in bndDict.items():
+            out_file = f"{field}_{bnd}.bin"
+            logger.info(f"Writing {out_file}")
+            arr.astype(">f4").tofile(out_file)  # type: ignore
+            print(np.count_nonzero(arr))
+    else:
+        z = vgrid_from_parm04(nml)
+        bndDict = mk_obcs(input, addc, mulc, z, lat, lon, omask, boundary)  # type: ignore
+        for bnd, arr in bndDict.items():
+            out_file = f"{field}_{bnd}.bin"
+            logger.info(f"Writing {out_file}")
+            arr.values.astype(">f4").tofile(out_file)  # type: ignore
 
 
 @app.command()
@@ -274,6 +327,50 @@ def mds(
         arr.values.astype(">f4").tofile(out_file)  # type: ignore
 
 
+def mk_obcs_eta(
+    input: str,
+    addc: float,
+    mulc: float,
+    lat: np.ndarray[Any, np.dtype[Any]],
+    lon: np.ndarray[Any, np.dtype[Any]],
+    omask: np.ndarray[Any, np.dtype[Any]],
+    boundary: list[Boundary] = [],
+) -> dict[str, np.ndarray]:  # type: ignore
+    """
+    Generate MITgcm ETA boundary condition
+
+    Steps:
+        1. Create mask files for basins which contains boundaries
+        2. remap input file
+        3. for each basin multiply the basin mask and take fldmean and create timeseries
+    """
+
+    basins, bndAct = mk_bnd_basins(lat, lon, omask, boundary)
+    basin_mean_vals: dict[str, np.ndarray] = {}  # type: ignore
+    for basin_code, basin_file in basins.items():
+        cdoOpr1 = input
+        cdoOpr1 = f" -fldmean -mul [ -remapnn,{basin_file} {cdoOpr1} {basin_file} ]"
+        cdoOpr1 = f" -addc,{addc} {cdoOpr1}"
+        logger.info(f"CDO operation: {cdoOpr1}")
+
+        out_file = cdo.mulc(mulc, input=cdoOpr1)  # type: ignore
+        ds = xr.open_dataset(out_file, decode_times=False, engine="netcdf4")  # type: ignore
+        da = get_data_array(ds).squeeze()
+        ds = xr.open_dataset(basin_file, decode_times=False, engine="netcdf4")  # type: ignore
+        da_mask = get_data_array(ds).squeeze()
+        nt = len(da.values)  # type: ignore
+        for bnd in bndAct:
+            mask = da_mask[BNDDEF[bnd]].squeeze()
+            if bnd not in basin_mean_vals:
+                shp = mask.shape
+                basin_mean_vals[bnd] = np.zeros([nt, *shp])
+                logger.info(f"Shape of Eta at {bnd} boundary is {(nt, *shp)}")
+            for i in range(nt):
+                basin_mean_vals[bnd][i, :] += da.values[i] * mask.values  # type: ignore
+
+    return basin_mean_vals  # type: ignore
+
+
 def mk_obcs(
     input: str,
     addc: float,
@@ -288,7 +385,6 @@ def mk_obcs(
     res: dict[str, xr.DataArray] = {}
     bndAct = mk_bnd_grid(lat, lon, omask, boundary)
     levels = ",".join(["{:.3f}".format(i) for i in z])
-    cdo = Cdo(tempdir="tmp/", options=["-f", "nc"])  # type: ignore
     for bnd, gridfile in bndAct:
         logger.info(f"Processing {bnd} boundary")
 
@@ -302,7 +398,7 @@ def mk_obcs(
         cdoOpr1 = f" -addc,{addc} {cdoOpr1}"
         logger.info(f"CDO operation: {cdoOpr1}")
 
-        out_file = cdo.mulc(mulc, input=cdoOpr1, output="out.nc")  # type: ignore
+        out_file = cdo.mulc(mulc, input=cdoOpr1)  # type: ignore
         ds = xr.open_dataset(out_file, decode_times=False, engine="netcdf4")  # type: ignore
         arr = get_data_array(ds)
         arr = arr.squeeze()

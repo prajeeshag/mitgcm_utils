@@ -1,11 +1,17 @@
 # type: ignore
 import logging
 import re
+import tempfile
 from pathlib import Path
 from typing import Any
 
 import f90nml  # type: ignore
 import numpy as np
+import xarray as xr
+
+nmlparser = f90nml.Parser()
+nmlparser.comment_tokens += "#"
+nmlparser.comment_tokens += "$"
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +75,144 @@ class CaseInsensitiveDict(dict[str, Any]):
 def load_bathy(bathy_file: Path, nx: int, ny: int):
     z = np.fromfile(bathy_file, ">f4")
     if len(z) != nx * ny:
-        raise ValueError(
-            f"Dimension mismatch for bathymetry field from file {bathy_file}"
-        )
+        if len(z) / 2 == nx * ny:
+            z = np.fromfile(bathy_file, ">f8")
+        else:
+            logger.error(f"Expected size of bathymetry {nx*ny} but got {len(z)}")
+            raise ValueError(
+                f"Dimension mismatch for bathymetry field from file {bathy_file}"
+            )
     return z.reshape(ny, nx)
 
 
-def load_grid(
+def get_bathy(run_dir_path: str, nx: int, ny: int):
+    nml_file = Path(run_dir_path) / "data"
+    nml = nmlparser.read(nml_file)
+    nml = CaseInsensitiveDict(nml)
+    try:
+        parm05 = nml["parm05"]
+        parm05 = CaseInsensitiveDict(parm05)
+    except KeyError as e:
+        print(nml)
+        logger.error("&parm05 namelist does not exist")
+        raise e
+    bathy_file_name = parm05["bathyfile"].strip()
+    if bathy_file_name[0] == "/":
+        bathy_file = bathy_file_name
+    else:
+        bathy_file = Path(run_dir_path) / parm05["bathyfile"]
+    return load_bathy(bathy_file, nx, ny)
+
+
+def get_hgrid(run_dir_path: str, nx: int, ny: int, as_ds=False):
+    nml_file = Path(run_dir_path) / "data"
+    grid_file = Path(run_dir_path) / "tile001.mitgrid"
+    nml = nmlparser.read(nml_file)
+    nml = CaseInsensitiveDict(nml)
+    try:
+        parm04 = nml["parm04"]
+        parm04 = CaseInsensitiveDict(parm04)
+    except KeyError as e:
+        print(nml)
+        logger.error("&parm04 namelist does not exist")
+        raise e
+
+    is_sp = False
+    is_curv = False
+    try:
+        is_sp = parm04["usingsphericalpolargrid"]
+    except KeyError:
+        pass
+    try:
+        is_curv = parm04["usingcurvilineargrid"]
+    except KeyError:
+        pass
+
+    if not is_curv and not is_sp:
+        logger.error("Both `usingCurvilinearGrid` & `usingsphericalpolargrid` is False")
+        raise ValueError(
+            "Both `usingCurvilinearGrid` & `usingsphericalpolargrid` is False"
+        )
+    if is_curv and is_sp:
+        logger.error("Both `usingCurvilinearGrid` & `usingsphericalpolargrid` is True")
+        raise ValueError(
+            "Both `usingCurvilinearGrid` & `usingsphericalpolargrid` is True"
+        )
+
+    if is_sp:
+        xC, yC = get_hcoords_from_nml(parm04, nx, ny)
+
+    if is_curv:
+        gA = read_mitgcm_grid(grid_file, nx, ny)
+        yC = gA["yC"][:-1, :-1]
+        xC = gA["xC"][:-1, :-1]
+
+    if as_ds:
+        return _get_grid_ds(xC, yC)
+    return _create_grid_file(xC, yC)
+
+
+def get_hcoords_from_nml(nml, nx, ny):
+    xgOrigin = nml["xgorigin"]
+    ygOrigin = nml["ygorigin"]
+    delX = nml["delX"]
+    delY = nml["delY"]
+    if nx != len(delX):
+        raise ValueError("len(delX) != nx")
+    if ny != len(delY):
+        raise ValueError("len(delY) != ny")
+    xG = np.zeros(nx + 1)
+    yG = np.zeros(ny + 1)
+    xC = np.zeros([ny, nx])
+    yC = np.zeros([ny, nx])
+    xG[0], yG[0] = xgOrigin, ygOrigin
+
+    for i in range(nx):
+        xG[i + 1] = xG[i] + delX[i]
+        xC[:, i] = xG[i] + 0.5 * delX[i]
+
+    for i in range(ny):
+        yG[i + 1] = yG[i] + delY[i]
+        yC[i, :] = yG[i] + 0.5 * delY[i]
+
+    return xC, yC
+
+
+def _create_grid_file(xC, yC, var=None):
+    ds_out = _get_grid_ds(xC, yC, var)
+    encoding = {var: {"_FillValue": None} for var in ds_out.variables}
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".nc") as tmpfile:
+        logger.info(f"Writing grid file to {tmpfile.name}")
+        ds_out.to_netcdf(tmpfile.name, encoding=encoding)
+    return tmpfile.name
+
+
+def _get_grid_ds(xC, yC, var=None):
+    if var is None:
+        var = xC
+    ds_out = xr.Dataset(
+        {
+            "lat": (
+                ["y", "x"],
+                yC,
+                {"units": "degrees_north"},
+            ),
+            "lon": (
+                ["y", "x"],
+                xC,
+                {"units": "degrees_east"},
+            ),
+            "var": (
+                ["y", "x"],
+                var,
+                {"units": "", "coordinates": "lat lon"},
+            ),
+        }
+    )
+    return ds_out
+
+
+def read_mitgcm_grid(
     grid_file: Path, nx: int, ny: int
 ) -> dict[str, np.ndarray[Any, np.dtype[Any]]]:
     nx1, ny1 = nx + 1, ny + 1
@@ -100,10 +237,6 @@ def load_grid(
 
 
 def vgrid_from_parm04(nml_file):
-    nmlparser = f90nml.Parser()
-    nmlparser.comment_tokens += "#"
-    nmlparser.comment_tokens += "$"
-
     nml = nmlparser.read(nml_file)
     nml = CaseInsensitiveDict(nml)
     try:

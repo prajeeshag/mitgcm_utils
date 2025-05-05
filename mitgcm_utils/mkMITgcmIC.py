@@ -1,19 +1,18 @@
 import logging
+import tempfile
 from pathlib import Path
 from typing import List
 
-import tempfile
 import numpy as np
-import xarray as xr
 import typer
+import xarray as xr
 from cdo import Cdo
 
 from .utils import (
-    load_grid,
     fill_missing3D,
+    read_mitgcm_grid,
     vgrid_from_parm04,
 )
-
 
 app = typer.Typer(add_completion=False)
 
@@ -39,7 +38,7 @@ logger.addHandler(handler)
 def gen_grid(grid_file: Path, nx: int, ny: int):
 
     logger.info("Reading grid info")
-    gA = load_grid(grid_file, nx, ny)
+    gA = read_mitgcm_grid(grid_file, nx, ny)
     ds_out = xr.Dataset(
         {
             "lat": (
@@ -62,7 +61,7 @@ def gen_grid(grid_file: Path, nx: int, ny: int):
     encoding = {var: {"_FillValue": None} for var in ds_out.variables}
     with tempfile.NamedTemporaryFile(delete=False, suffix=".nc") as tmpfile:
         logger.info(f"Writing grid file to {tmpfile.name}")
-        ds_out.to_netcdf(tmpfile.name, encoding=encoding)
+        ds_out.to_netcdf(tmpfile.name, encoding=encoding)  # type: ignore
     return tmpfile.name
 
 
@@ -120,7 +119,7 @@ def main(
     It assume that the levels are in meters and is from top to bottom
     """
 
-    cdo = Cdo(tempdir='tmp/')
+    cdo = Cdo(tempdir="tmp/")
     grid_nml = nml
     z, _, _ = vgrid_from_parm04(grid_nml)
     levels = ",".join(["{:.3f}".format(i) for i in z])
@@ -128,8 +127,8 @@ def main(
     gridFile = gen_grid(mitgrid, nx, ny)
 
     cdoOpr1 = f" -selvar,{varnm} -seltimestep,{timestep} {input} "
-    cdoOpr2 = f" -setlevel,0 -sellevidx,1 " + cdoOpr1
-    cdoOpr1 = f" -merge " + cdoOpr2 + cdoOpr1
+    cdoOpr2 = " -setlevel,0 -sellevidx,1 " + cdoOpr1
+    cdoOpr1 = " -merge " + cdoOpr2 + cdoOpr1
     cdoOpr1 = f" -remapnn,{gridFile} " + cdoOpr1
     cdoOpr1 = f" -mulc,{mulc} -addc,{addc} " + cdoOpr1
     cdoOpr = f" -intlevel,{levels} " + cdoOpr1
@@ -147,7 +146,7 @@ def main(
     if np.any(np.isnan(arr.values)):
         raise RuntimeError("Nan Values present in the initial conditions")
 
-    if ovarnm is None:
+    if ovarnm is None:  # type: ignore
         ovarnm = varnm
 
     out_file = f"{ovarnm}_ini.bin"
