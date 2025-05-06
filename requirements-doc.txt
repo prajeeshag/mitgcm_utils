@@ -1,9 +1,3 @@
-sphinx
-sphinx_rtd_theme
-typer
-sphinx-click
-sphinx-copybutton
-docstring_parser
-myst-parser
-sphinx-design
-sphinx_termynal
+mkdocs>=1.6.1
+mkdocs-material>=9.5.44
+mkdocs-click>=0.9.0

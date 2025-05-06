@@ -178,8 +178,8 @@ def igrid(
     input: str = typer.Option(
         help="""
         Input can be: \n
-         1. A NetCDF file.
-         2. A valid cdo option which will generate a NetCDF file.
+         1. A NetCDF file. \n
+         2. A valid cdo option which will generate a NetCDF file. \n
          e.g. "-mergetime input1.nc input2.nc input3.nc"
          """,
     ),
@@ -190,7 +190,7 @@ def igrid(
         help="Number of points in y-direction",
     ),
     field: str = typer.Option(
-        help="""Boundary field name, i.e. T, S, U, V, Eta... \n
+        help="""Boundary field name, i.e. T, S, U, V, Eta \n
             e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,..
             For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively.
             For all other fields Center grid coordinates of Arakawa-C will be used.
@@ -253,7 +253,7 @@ def mds(
              """,
     ),
     field: str = typer.Option(
-        help="""Boundary field name, i.e. T, S, U, V,... \n
+        help="""Boundary field name, i.e. T, S, U, V \n
             e.g.; This will be used to generate files <field>_E.bin, <field>_W.bin,.. \n
             For field "U" and "V", West and South grid coordinates of Arakawa-C will be used respectively. \n
             For all other fields Center grid coordinates of Arakawa-C will be used. \n
