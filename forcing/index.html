@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>External forcings - mitgcm_utils</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "External forcings";
+        var mkdocs_page_input_path = "forcing.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> mitgcm_utils
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../boundary/">Boundary conditions</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../initial/">Initial conditions</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">External forcings</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#mkmitgcmexf">mkMITgcmEXF</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#mkmitgcmexf-from-wrf">from-wrf</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">mitgcm_utils</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">External forcings</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/prajeeshag/mitgcm_utils/edit/master/docs/forcing.md">Edit on prajeeshag/mitgcm_utils</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="creating-mitgcm-external-forcing">Creating MITGCM External forcing<a class="headerlink" href="#creating-mitgcm-external-forcing" title="Permanent link">&para;</a></h1>
+<h2 id="mkmitgcmexf">mkMITgcmEXF<a class="headerlink" href="#mkmitgcmexf" title="Permanent link">&para;</a></h2>
+<p><strong>Usage:</strong></p>
+<pre><code class="language-text">mkMITgcmEXF [OPTIONS] COMMAND [ARGS]...
+</code></pre>
+<p><strong>Options:</strong></p>
+<pre><code class="language-text">  --help  Show this message and exit.
+</code></pre>
+<p><strong>Subcommands</strong></p>
+<ul>
+<li><em><a href="#mkmitgcmexf-from-wrf">from-wrf</a></em>: Create MITGCM external forcing files from WRF output.</li>
+</ul>
+<h3 id="mkmitgcmexf-from-wrf">mkMITgcmEXF from-wrf<a class="headerlink" href="#mkmitgcmexf-from-wrf" title="Permanent link">&para;</a></h3>
+<p>Create MITGCM external forcing files from WRF output.</p>
+<div class="highlight"><pre><span></span><code>- Creates a land sea mask (LSM) file from the geo_em file (if specified) or the first WRF output file.
+
+- Merges the WRF output files and applies the sellonlatbox operation if specified.
+
+- Infer the time interval in seconds from the time difference between the first two time steps.
+
+- Mask the land points and extrapolate it with the nearest neighbor method for T2, Q2 and PSFC.
+
+- Compute the time difference quantities of accumulated fields.
+
+- Unit conversions for RAIN: mm/sec to m/sec.
+
+- Fields are renamed to match the names in https://mitgcm.readthedocs.io/en/latest/phys_pkgs/exf.html#exf-input-fields-and-units
+- Writes the resulting data to MITgcm compatible binary files with the specified suffix.
+</code></pre></div>
+<p>Note:</p>
+<div class="highlight"><pre><span></span><code>- The first time step is dropped since it is used only to compute the time difference quatities of accumulated fields.
+</code></pre></div>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>`mkMITgcmEXF from-wrf --lonlatbox 29.8,50.2,9.8,30.2 --geo-em-file geo_em.d01.nc wrfout_d01_*`
+</code></pre></div>
+<p><strong>Usage:</strong></p>
+<pre><code class="language-text">mkMITgcmEXF from-wrf [OPTIONS] WRF_OUTPUT_FILES...
+</code></pre>
+<p><strong>Options:</strong></p>
+<pre><code class="language-text">  WRF_OUTPUT_FILES...  WRF output files  \[required]
+  --geo-em TEXT        geo_em file
+  --lonlatbox TEXT     lonlatbox as lon1,lon2,lat1,lat2
+  --suffix TEXT        suffix for output files  \[default: .bin]
+  --help               Show this message and exit.
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../initial/" class="btn btn-neutral float-left" title="Initial conditions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/prajeeshag/mitgcm_utils" class="fa fa-code-fork" style="color: #fcfcfc"> prajeeshag/mitgcm_utils</a>
+        </span>
+    
+    
+      <span><a href="../initial/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
