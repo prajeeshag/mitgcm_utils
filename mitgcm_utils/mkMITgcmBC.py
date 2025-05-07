@@ -101,7 +101,7 @@ def mk_bnd_basins(
         bnd_feature_set.update(features[1:])
 
     for feature in bnd_feature_set:
-        farray = np.where(larray == feature, 1, 0)  # type: ignore
+        farray = np.where(larray == feature, 1, np.nan)  # type: ignore
         basin_mask_files[int(feature)] = _create_grid_file(lon, lat, farray)
 
     return basin_mask_files, bndAct
@@ -347,7 +347,7 @@ def mk_obcs_eta(
 
     basins, bndAct = mk_bnd_basins(lat, lon, omask, boundary)
     basin_mean_vals: dict[str, np.ndarray] = {}  # type: ignore
-    for basin_code, basin_file in basins.items():
+    for _, basin_file in basins.items():
         cdoOpr1 = input
         cdoOpr1 = f" -fldmean -mul [ -remapnn,{basin_file} {cdoOpr1} {basin_file} ]"
         cdoOpr1 = f" -addc,{addc} {cdoOpr1}"
@@ -360,7 +360,7 @@ def mk_obcs_eta(
         da_mask = get_data_array(ds).squeeze()
         nt = len(da.values)  # type: ignore
         for bnd in bndAct:
-            mask = da_mask[BNDDEF[bnd]].squeeze()
+            mask = da_mask[BNDDEF[bnd]].squeeze().fillna(0)
             if bnd not in basin_mean_vals:
                 shp = mask.shape
                 basin_mean_vals[bnd] = np.zeros([nt, *shp])
