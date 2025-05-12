@@ -93,7 +93,6 @@ def get_bathy(run_dir_path: str, nx: int, ny: int):
         parm05 = nml["parm05"]
         parm05 = CaseInsensitiveDict(parm05)
     except KeyError as e:
-        print(nml)
         logger.error("&parm05 namelist does not exist")
         raise e
     bathy_file_name = parm05["bathyfile"].strip()
@@ -113,7 +112,6 @@ def get_hgrid(run_dir_path: str, nx: int, ny: int, as_ds=False):
         parm04 = nml["parm04"]
         parm04 = CaseInsensitiveDict(parm04)
     except KeyError as e:
-        print(nml)
         logger.error("&parm04 namelist does not exist")
         raise e
 
@@ -242,7 +240,6 @@ def vgrid_from_parm04(nml_file):
     try:
         nml = nml["parm04"]
     except KeyError as e:
-        print(nml)
         logger.error("&parm04 namelist does not exist")
         raise e
 
@@ -266,7 +263,6 @@ def vgrid_from_parm04(nml_file):
 
 
 def fill_missing3D(arr):
-    print(arr.shape)
     for i in range(arr.shape[0]):
         arr2D = arr[i, :, :]
         if np.all(np.isnan(arr2D)):
@@ -289,11 +285,10 @@ def fill_missing2D(arr):
 
     # Get the shape of the array
     nrows, ncols = arr.shape
-
     # Define the directions to search for nearest neighbors
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-
     # Perform a spiral grid search to fill in missing values with nearest neighbors
+    arr_copy = arr.copy()
     for r, c in missing_indices:
         for i in range(1, max(nrows, ncols)):
             for dr, dc in directions:
@@ -305,11 +300,12 @@ def fill_missing2D(arr):
                     and nc < ncols
                     and not np.isnan(arr[nr, nc])
                 ):
-                    arr[r, c] = arr[nr, nc]
+                    arr_copy[r, c] = arr[nr, nc]
                     break
             if not np.isnan(arr[r, c]):
                 break
-
+    arr[:,:] = arr_copy[:,:]
+    return arr_copy
 
 def get_dimlist_from_meta_file(fname: Path) -> list[list[int]]:
     """Get the dimList out of the MITgcm mds .meta file."""
