@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>External forcings - mitgcm_utils</title>
+    <title>Bathymetry - mitgcm_utils</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "External forcings";
-        var mkdocs_page_input_path = "forcing.md";
+        var mkdocs_page_name = "Bathymetry";
+        var mkdocs_page_input_path = "bathy.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -51,24 +51,20 @@
                 <li class="toctree-l1"><a class="reference internal" href="../initial/">Initial conditions</a>
                 </li>
               </ul>
-              <ul class="current">
-                <li class="toctree-l1 current"><a class="reference internal current" href="#">External forcings</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#mkmitgcmexf">mkMITgcmEXF</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#mkmitgcmexf-from-wrf">from-wrf</a>
-    </li>
-        </ul>
-    </li>
-    </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../forcing/">External forcings</a>
                 </li>
               </ul>
               <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../grid/">Grid</a>
                 </li>
               </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../bathy/">Bathymetry</a>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Bathymetry</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#mkmitgcmbathy">mkMITgcmBathy</a>
+    </li>
+    </ul>
                 </li>
               </ul>
       </div>
@@ -85,9 +81,9 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">External forcings</li>
+      <li class="breadcrumb-item active">Bathymetry</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/prajeeshag/mitgcm_utils/edit/master/docs/forcing.md">Edit on prajeeshag/mitgcm_utils</a>
+          <a href="https://github.com/prajeeshag/mitgcm_utils/edit/master/docs/bathy.md">Edit on prajeeshag/mitgcm_utils</a>
     </li>
   </ul>
   <hr/>
@@ -95,57 +91,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="creating-mitgcm-external-forcing">Creating MITGCM External forcing<a class="headerlink" href="#creating-mitgcm-external-forcing" title="Permanent link">&para;</a></h1>
-<h2 id="mkmitgcmexf">mkMITgcmEXF<a class="headerlink" href="#mkmitgcmexf" title="Permanent link">&para;</a></h2>
+                <h1 id="creating-mitgcm-bathymetry">Creating MITGCM Bathymetry<a class="headerlink" href="#creating-mitgcm-bathymetry" title="Permanent link">&para;</a></h1>
+<h2 id="mkmitgcmbathy">mkMITgcmBathy<a class="headerlink" href="#mkmitgcmbathy" title="Permanent link">&para;</a></h2>
+<p>Create bathymetry file for MITgcm:
+1. From the grid information taken from <code>data</code> namelist (Default)
+2. From the grid information from the <code>grid-file</code>, (--nx, --ny, --out-file) should be provided</p>
 <p><strong>Usage:</strong></p>
-<pre><code class="language-text">mkMITgcmEXF [OPTIONS] COMMAND [ARGS]...
+<pre><code class="language-text">mkMITgcmBathy [OPTIONS]
 </code></pre>
 <p><strong>Options:</strong></p>
-<pre><code class="language-text">  --help  Show this message and exit.
-</code></pre>
-<p><strong>Subcommands</strong></p>
-<ul>
-<li><em><a href="#mkmitgcmexf-from-wrf">from-wrf</a></em>: Create MITGCM external forcing files from WRF output.</li>
-</ul>
-<h3 id="mkmitgcmexf-from-wrf">mkMITgcmEXF from-wrf<a class="headerlink" href="#mkmitgcmexf-from-wrf" title="Permanent link">&para;</a></h3>
-<p>Create MITGCM external forcing files from WRF output.</p>
-<div class="highlight"><pre><span></span><code>- Creates a land sea mask (LSM) file from the geo_em file (if specified) or the first WRF output file.
-
-- Merges the WRF output files and applies the sellonlatbox operation if specified.
-
-- Infer the time interval in seconds from the time difference between the first two time steps.
-
-- Mask the land points and extrapolate it with the nearest neighbor method for T2, Q2 and PSFC.
-
-- Compute the time difference quantities of accumulated fields.
-
-- Unit conversions for RAIN: mm/sec to m/sec.
-
-- Fields are renamed to match the names in https://mitgcm.readthedocs.io/en/latest/phys_pkgs/exf.html#exf-input-fields-and-units
-- Writes the resulting data to MITgcm compatible binary files with the specified suffix.
-</code></pre></div>
-<p>Note:</p>
-<div class="highlight"><pre><span></span><code>- The first time step is dropped since it is used only to compute the time difference quatities of accumulated fields.
-</code></pre></div>
-<p>Example:</p>
-<div class="highlight"><pre><span></span><code>`mkMITgcmEXF from-wrf --lonlatbox 29.8,50.2,9.8,30.2 --geo-em-file geo_em.d01.nc wrfout_d01_*`
-</code></pre></div>
-<p><strong>Usage:</strong></p>
-<pre><code class="language-text">mkMITgcmEXF from-wrf [OPTIONS] WRF_OUTPUT_FILES...
-</code></pre>
-<p><strong>Options:</strong></p>
-<pre><code class="language-text">  WRF_OUTPUT_FILES...  WRF output files  \[required]
-  --geo-em TEXT        geo_em file
-  --lonlatbox TEXT     lonlatbox as lon1,lon2,lat1,lat2
-  --suffix TEXT        suffix for output files  \[default: .bin]
-  --help               Show this message and exit.
+<pre><code class="language-text">  --in-file FILE    Path of input bathymetry netcdf file  \[required]
+  --grid-file FILE  grid file
+  --nx INTEGER      no of grid points in x-dir (must be given if grid_file is
+                    given)
+  --ny INTEGER      no of grid points in y-dir (must be given if grid_file is
+                    given)
+  --out-file FILE   output bathymetry file (must be given if grid_file is
+                    given)
+  --help            Show this message and exit.
 </code></pre>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../initial/" class="btn btn-neutral float-left" title="Initial conditions"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../grid/" class="btn btn-neutral float-right" title="Grid">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../grid/" class="btn btn-neutral float-left" title="Grid"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
 
   <hr/>
@@ -172,10 +141,8 @@
         </span>
     
     
-      <span><a href="../initial/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../grid/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
-    
-      <span><a href="../grid/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
