@@ -1,5 +1,5 @@
 
-# Creating MITGCM Grid and Bathymetry 
+# Creating MITGCM Grid
 ::: mkdocs-click
     :module: mitgcm_utils.mkMITgcmGrid
     :command: app_click
