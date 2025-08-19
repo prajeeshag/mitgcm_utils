@@ -10,6 +10,7 @@ nav:
     - Boundary conditions: boundary.md
     - Initial conditions: initial.md
     - External forcings: forcing.md
+    - Grid Generation: grid.md
 
 plugins:
 

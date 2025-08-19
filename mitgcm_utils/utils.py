@@ -1,5 +1,6 @@
 # type: ignore
 import logging
+import math
 import re
 import tempfile
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import Any
 import f90nml  # type: ignore
 import numpy as np
 import xarray as xr
+from sphericalpolygon import Sphericalpolygon
 
 nmlparser = f90nml.Parser()
 nmlparser.comment_tokens += "#"
@@ -21,6 +23,8 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+RSPHERE = 6370000.0
 
 MITGCM_GRID_VARS = [
     "xC",
@@ -304,8 +308,9 @@ def fill_missing2D(arr):
                     break
             if not np.isnan(arr[r, c]):
                 break
-    arr[:,:] = arr_copy[:,:]
+    arr[:, :] = arr_copy[:, :]
     return arr_copy
+
 
 def get_dimlist_from_meta_file(fname: Path) -> list[list[int]]:
     """Get the dimList out of the MITgcm mds .meta file."""
@@ -332,6 +337,49 @@ def get_dimlist_from_meta_file(fname: Path) -> list[list[int]]:
         [int(h) for h in re.split(",", g)] for g in re.split(",\n", flds["dimList"])
     ]
     return dimList
+
+
+def great_circle(lon1, lat1, lon2, lat2, input_in_radians=False, rearth=RSPHERE):
+    """
+    Calculates the great circle distance between two points on the Earth's surface,
+    given their longitude and latitude coordinates.
+
+    Arguments:
+
+    lon1 (float): the longitude of the first point
+    lat1 (float): the latitude of the first point
+    lon2 (float): the longitude of the second point
+    lat2 (float): the latitude of the second point
+    input_in_radians (bool): a flag indicating whether the
+            input coordinates are in radians (True) or degrees (False).
+            Default is False.
+    rearth (float): the radius of the Earth in kilometers. Default is 6370000 m.
+    Returns:
+
+    The great circle distance between the two points, in kilometers."""
+    xlon1, xlat1, xlon2, xlat2 = lon1, lat1, lon2, lat2
+    if not input_in_radians:
+        xlon1, xlat1, xlon2, xlat2 = map(math.radians, [xlon1, xlat1, xlon2, xlat2])
+    dlon = xlon2 - xlon1
+    dlat = xlat2 - xlat1
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(xlat1) * math.cos(xlat2) * math.sin(dlon / 2) ** 2
+    )
+    return 2.0 * rearth * math.asin(math.sqrt(a))
+
+
+def quadrilateral_area_on_earth(
+    a: tuple[float, float],
+    b: tuple[float, float],
+    c: tuple[float, float],
+    d: tuple[float, float],
+    R: float = RSPHERE,
+) -> float:
+    # return polygon_area([a, b, c, d, a]) * R * R
+    arr = [a, b, c, d]
+    polygon = Sphericalpolygon.from_array([a, b, c, d])
+    return polygon.area(R)
 
 
 if __name__ == "__main__":
