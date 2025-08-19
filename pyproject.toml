@@ -22,6 +22,7 @@ dependencies = [
     "pandas>=2.2,<2.3",
     "mpl_interactions>=0.24,<0.25",
     "sphericalpolygon>=1.2,<1.3",
+    "xesmf>=0.8,<0.9"
 ]
 
 [tool.setuptools.packages.find]
@@ -30,5 +31,7 @@ exclude = ["test_data", "docs"]
 [project.scripts]
 mkMITgcmEXF = "mitgcm_utils.mkMITgcmEXF:app"
 mkMITgcmBC = "mitgcm_utils.mkMITgcmBC:app"
+mkMITgcmIC = "mitgcm_utils.mkMITgcmIC:app"
 mkMITgcmGrid = "mitgcm_utils.mkMITgcmGrid:app"
+mkMITgcmBathy = "mitgcm_utils.mkMITgcmBathy:app"
 beditor = "mitgcm_utils.beditor:app"

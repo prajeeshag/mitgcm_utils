@@ -386,3 +386,50 @@ if __name__ == "__main__":
     print(get_dimlist_from_meta_file(Path("test_data/grid_data/XC.meta")))
     print(get_dimlist_from_meta_file(Path("test_data/grid_data/RC.meta")))
     print(get_dimlist_from_meta_file(Path("test_data/grid_data/hFacC.meta")))
+
+
+def load_grid(grid_file: Path, nx: int, ny: int) -> dict:
+    nx1, ny1 = nx + 1, ny + 1
+    nxy1 = nx1 * ny1
+    fdata = np.fromfile(grid_file, ">f8")
+    nvars = int(fdata.shape[0] / nxy1)
+    if nvars not in [len(MITGCM_GRID_VARS), len(MITGCM_GRID_VARS) - 2]:
+        raise ValueError(
+            f"{grid_file} does not contain enough variables needed for a mitgcm grid"
+        )
+    nele1 = nvars * nxy1
+    nele = fdata.shape[0]
+    if nvars * nxy1 != fdata.shape[0]:
+        raise ValueError(
+            f"nvars*(nx+1)*(ny+1) != shape of the data read: {nele1} != {nele}"
+        )
+    fdata = fdata.reshape([nvars, ny1, nx1])
+    gridA = {}
+    for i in range(nvars):
+        gridA[MITGCM_GRID_VARS[i]] = fdata[i, :, :]
+    return gridA
+
+
+def gridinfo_from_parm04(nml):
+    xgorigin = nml["xgorigin"]
+    ygorigin = nml["ygorigin"]
+    delx = nml["delx"]
+    dely = nml["dely"]
+    nx = len(delx)
+    ny = len(dely)
+
+    lon_bnd = np.zeros(nx + 1)
+    lat_bnd = np.zeros(ny + 1)
+
+    lon_bnd[0] = xgorigin
+    lat_bnd[0] = ygorigin
+
+    for i, dx in enumerate(delx):
+        lon_bnd[i + 1] = lon_bnd[i] + dx
+
+    for i, dy in enumerate(dely):
+        lat_bnd[i + 1] = lat_bnd[i] + dy
+
+    lon = (lon_bnd[1:] + lon_bnd[0:-1]) * 0.5
+    lat = (lat_bnd[1:] + lat_bnd[0:-1]) * 0.5
+    return nx, ny, lon, lat

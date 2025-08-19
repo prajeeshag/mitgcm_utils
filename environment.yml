@@ -5,4 +5,5 @@ channels:
 dependencies:
   - python=3.10
   - cdo=2.4.4
-  - pip 
+  - pip
+  - "xesmf>=0.8,<0.9"
