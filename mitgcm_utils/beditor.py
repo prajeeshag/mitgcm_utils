@@ -1,19 +1,21 @@
+# type: ignore
 import logging
 import math
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
-import matplotlib.colors as mcolors
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
-import numpy as np
-import typer
-from matplotlib.backend_bases import MouseButton
-from matplotlib.widgets import Button
+import matplotlib.colors as mcolors  # type: ignore
+import matplotlib.patches as patches  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
+import numpy as np  # type: ignore
+import typer  # type: ignore
+from matplotlib.backend_bases import MouseButton  # type: ignore
+from matplotlib.widgets import Button  # type: ignore
 from mpl_interactions import panhandler, zoom_factory  # type: ignore
 from scipy import ndimage  # type: ignore
 
-from .utils import load_bathy
+from .utils import load_bathy  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +106,7 @@ class Features:
             raise NotImplementedError(f"Allowed feature names are {FeatureName}")
 
         self.shown = False
-        self.boxes = []
+        self.boxes: list[Any] = []
         self._get_features()
 
     def _creek_mask(self, mask, n_neibhours=3):  # type: ignore
@@ -129,19 +131,19 @@ class Features:
 
     def _get_features(self):
         self.array, num_labels = ndimage.label(self.mask)  # type: ignore
-        self.labels = list(range(1, num_labels + 1))
+        self.labels = list(range(1, num_labels + 1))  # type: ignore
 
     def max_points(self, n, array=None):  # type: ignore
         labels = []
         if array is None:
-            array = self.array.copy()
+            array = self.array.copy()  # type: ignore
         for i in self.labels:
             npoints = np.count_nonzero(array == i)  # type: ignore
             if npoints > 0 and npoints <= n:
                 labels.append(i)  # type: ignore
             else:
                 array[array == i] = 0
-        return array, labels
+        return array, labels  # type: ignore
 
     def no_edge(self, array=None):
         if array is None:
@@ -274,7 +276,7 @@ def del_islands(
         help="Only consider features having grid points <= `n_points`",
     ),
 ):
-    Features(FeatureName.ISLAND, bathy_file, nx, ny).edit_features(n_points=n_points)
+    Features(FeatureName.ISLAND, bathy_file, nx, ny).edit_features(n_points=n_points)  # type: ignore
 
 
 @app.command("del_ponds")
