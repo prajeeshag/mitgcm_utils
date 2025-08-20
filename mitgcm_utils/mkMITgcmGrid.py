@@ -7,7 +7,11 @@ import numpy as np
 import typer
 import xarray as xr
 
-from .utils import MITGCM_GRID_VARS, great_circle, quadrilateral_area_on_earth
+from .utils import (  # type: ignore
+    MITGCM_GRID_VARS,
+    great_circle,  # type: ignore
+    quadrilateral_area_on_earth,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +44,9 @@ def wrfgrid(
     yC  -> (j=0, i=0), (j=0, i=nx-1), (j=ny-1,i=nx-1), (j=ny-1,i=0)
     """
 
-    def print_info(var):
-        min_val = np.amin(gA[var][:, :])
-        max_val = np.amax(gA[var][:, :])
+    def print_info(var: str):
+        min_val = np.amin(gA[var][:, :])  # type: ignore
+        max_val = np.amax(gA[var][:, :])  # type: ignore
         logger.info(f"{var} min = {min_val}")
         logger.info(f"{var} max = {max_val}")
 
