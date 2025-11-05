@@ -13,7 +13,7 @@ for name in var_names:
     # t = np.random.randint(0, nt)
     t = 0
     # plot pcolormesh of the field and save the file
-    plt.pcolormesh(var[t, :, :])  # type: ignore
+    plt.pcolormesh(var[t, :, 0:300])  # type: ignore
     # reverse y-axis
     plt.gca().invert_yaxis()
     plt.colorbar()  # type: ignore

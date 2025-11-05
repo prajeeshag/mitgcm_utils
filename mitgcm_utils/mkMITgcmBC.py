@@ -367,16 +367,16 @@ def mk_obcs_eta(
                 logger.info(f"Shape of Eta at {bnd} boundary is {(nt, *shp)}")
             for i in range(nt):
                 basin_mean_vals[bnd][i, :] += da.values[i] * mask.values  # type: ignore
-                
+
     # fill missing with nearest neighbour
     logger.info(f"Filling missing values with nearest neighbour")
     for bnd in bndAct:
         mask = da_mask[BNDDEF[bnd]].squeeze()
         for i in range(nt):
-            arr = basin_mean_vals[bnd][i:i+1,:]
-            arr[0,:] = np.where(mask.values == 0, np.nan, arr[0,:])  # type: ignore
-            basin_mean_vals[bnd][i:i+1,:] = fill_missing2D(arr)  # type: ignore
-        
+            arr = basin_mean_vals[bnd][i : i + 1, :]
+            arr[0, :] = np.where(mask.values == 0, np.nan, arr[0, :])  # type: ignore
+            basin_mean_vals[bnd][i : i + 1, :] = fill_missing2D(arr)  # type: ignore
+
     return basin_mean_vals  # type: ignore
 
 
@@ -400,10 +400,10 @@ def mk_obcs(
         cdoOpr1 = input
         cdoOpr2 = f" -setlevel,0 -sellevidx,1 {cdoOpr1}"
         cdoOpr1 = f" -merge {cdoOpr2} {cdoOpr1}"
-        cdoOpr1 = f" -remapnn,{gridfile} {cdoOpr1}"
+        cdoOpr1 = f" -remapbil,{gridfile} {cdoOpr1}"
+        cdoOpr1 = f" -setmisstonn {cdoOpr1}"
         cdoOpr1 = f" -intlevel,{levels} " + cdoOpr1
         cdoOpr1 = f" -vertfillmiss {cdoOpr1}"
-        cdoOpr1 = f" -setmisstonn {cdoOpr1}"
         cdoOpr1 = f" -addc,{addc} {cdoOpr1}"
         logger.info(f"CDO operation: {cdoOpr1}")
 
