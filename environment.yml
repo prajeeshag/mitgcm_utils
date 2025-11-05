@@ -1,7 +1,6 @@
 name: mitgcm
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python=3.12
   - cdo=2.4.4
